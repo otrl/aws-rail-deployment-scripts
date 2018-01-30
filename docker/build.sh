@@ -15,15 +15,15 @@ ecs_host="834579172960.dkr.ecr.eu-west-2.amazonaws.com"
 # -v The OTRL package version to install in the container.   Default:  unset
 # -n The name to give the container.  Default: the directory name
 
-usage() { 
+usage() {
   echo
-  echo "Usage: $0 [-t container_tag] [-v package_version] [-n container_name]"; 
+  echo "Usage: $0 [-t container_tag] [-v package_version] [-n container_name]";
   echo
   echo "   -t : the container tag to build/push.   Default:  $container_tag"
   echo "   -v : the OTRL package version to install in the container.   Default:  unset"
   echo "   -n : the name to give the container.  Default: $container_name"
-  echo 
-  exit 1; 
+  echo
+  exit 1;
 }
 
 while getopts ":t:v:n:h" opt; do
@@ -56,7 +56,7 @@ shift $((OPTIND -1))
 # Entrypoint script
 
 if [ ! -f "entrypoint" ]; then
- cp ../common_files/entrypoint entrypoint.tmp
+ wget -q https://raw.githubusercontent.com/otrl/aws-rail-deployment-scripts/docker/entrypoint entrypoint.tmp
 fi
 
 
@@ -67,7 +67,7 @@ echo "Building container..."
 echo "Container tag:  $container_tag"
 echo "Container name: $container_name"
 echo "OTRL package version: $package_version"
-echo 
+echo
 
 
 ###################################
