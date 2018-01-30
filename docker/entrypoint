@@ -1,0 +1,47 @@
+#!/bin/bash
+
+if [ -z "${otrl_service_name+x}" ]; then
+ echo
+ echo "The env variable \$otrl_service_name wasn't set."
+ echo
+ exit 1
+fi
+
+
+#Generate the ${otrl_service_name} config file
+mkdir -p /etc/${otrl_service_name}/conf.d/
+/usr/local/bin/templater /opt/templates/config.tmpl /etc/${otrl_service_name}/conf.d/${otrl_service_name}.conf
+
+if [ $? -ne "0" ]; then
+ echo "Failed to create the ${otrl_service_name} config file."
+ exit 1
+fi
+
+#Import RMQ certs
+cert_passphrase=`cat /run/secrets/rabbitmq_key_passphrase`
+mkdir -p /etc/rabbitmq/client-ssl
+keytool -import -noprompt -storepass $cert_passphrase -keystore /etc/rabbitmq/client-ssl/trustStore -file /run/secrets/rabbitmq_server_cert
+
+if [ $? -ne "0" ]; then
+ echo "Failed to import the RabbitMQ key."
+ exit 1
+fi
+
+if [ ! -f "/etc/rabbitmq/client-ssl/keycert.p12" -a -f "/run/secrets/rabbitmq_client_p12" ]; then
+ cp /run/secrets/rabbitmq_client_p12 /etc/rabbitmq/client-ssl/keycert.p12
+else
+ echo "Couldn't find the RabbitMQ client certificate."
+ exit
+fi
+
+
+if [ "$SERVICE_LOG_LEVEL" ]; then
+ sed -i "s/WARN/${SERVICE_LOG_LEVEL}/g" /etc/${otrl_service_name}/logback.xml
+fi
+ 
+
+#Logs to stdout
+ln -sf /dev/stdout /var/log/${otrl_service_name}/${otrl_service_name}.log 
+
+#Run ${otrl_service_name}
+exec /usr/share/${otrl_service_name}/bin/${otrl_service_name}
