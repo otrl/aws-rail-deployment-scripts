@@ -1,35 +1,41 @@
 #!/bin/bash
 
 ####################################
+# BASH options
+
+set -e
+
+
+####################################
 # Defaults
 
 container_name=${PWD##*/}
-container_tag="latest"
+container_tags=`date '+%Y-%m-%d--%H:%M:%S'`
 ecs_host="834579172960.dkr.ecr.eu-west-2.amazonaws.com"
 
 
 ###################################
 # Get/set options
 
-# -t The container tag to build/push.   Default:  latest
-# -v The OTRL package version to install in the container.   Default:  unset
-# -n The name to give the container.  Default: the directory name
-
 usage() {
   echo
-  echo "Usage: $0 [-t container_tag] [-v package_version] [-n container_name]";
+  echo "Usage: $0 [-t container_tags] [-v package_version] [-n container_name]";
   echo
-  echo "   -t : the container tag to build/push.   Default:  $container_tag"
+  echo "   -t : the container tags to build/push (comma-separated),  Default:  $container_tags"
   echo "   -v : the OTRL package version to install in the container.   Default:  unset"
   echo "   -n : the name to give the container.  Default: $container_name"
+  echo "   -l : tag this container as 'latest'"
   echo
   exit 1;
 }
 
-while getopts ":t:v:n:h" opt; do
+while getopts ":t:v:n:lh" opt; do
   case $opt in
     t)
-      container_tag=$OPTARG
+      container_tags=(${OPTARG//,/ })
+      ;;
+    l)
+      is_latest="true"
       ;;
     v)
       package_version="=${OPTARG}"
@@ -44,9 +50,9 @@ while getopts ":t:v:n:h" opt; do
       usage
       ;;
     : )
-        echo "Invalid Option: -$OPTARG requires an argument" 1>&2
-        exit 1
-        ;;
+      echo "Invalid Option: -$OPTARG requires an argument" 1>&2
+      exit 1
+      ;;
   esac
 done
 shift $((OPTIND -1))
@@ -64,7 +70,7 @@ fi
 
 echo
 echo "Building container..."
-echo "Container tag:  $container_tag"
+echo "Container tag:  $container_tags"
 echo "Container name: $container_name"
 echo "OTRL package version: $package_version"
 echo
@@ -73,24 +79,41 @@ echo
 ###################################
 # Build
 
-docker build --build-arg package_version="$package_version" -t ${ecs_host}/${container_name}:${container_tag} .
+docker build --build-arg package_version="$package_version" -t ${ecs_host}/${container_name} .
 
 rm -f entrypoint.tmp
 
 
 ###################################
+# Tag
+
+for this_tag in "${container_tags[@]}" ; do
+
+ docker tag ${ecs_host}/${container_name} ${ecs_host}/${container_name}:${this_tag}
+
+done
+
+if [ "$is_latest" == "true" ]; then
+
+ docker tag ${ecs_host}/${container_name} ${ecs_host}/${container_name}:latest
+
+fi
+
+
+###################################
 # Push
 
-if [ "$?" -eq "0" ]; then
- docker push ${ecs_host}/${container_name}:${container_tag}
+
+for this_tag in "${container_tags[@]}" ; do
+
+ docker push ${ecs_host}/${container_name}:${this_tag}
+
+done
+
+
+if [ "$is_latest" == "true" ]; then
+
+ docker push ${ecs_host}/${container_name}:latest
+
 fi
 
-if [ "$?" -ne "0" ]; then
- echo
- echo "Unable to push the image to the repository. Either the repository doesn't"
- echo "exist yet or perhaps you might need to log into the repository again."
- echo "Run: \$(aws ecr get-login --no-include-email --region eu-west-2)"
- echo "to automatically log in."
- echo
- exit 1
-fi
