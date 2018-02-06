@@ -62,7 +62,8 @@ shift $((OPTIND -1))
 # Entrypoint script
 
 if [ ! -f "bin/entrypoint" ]; then
- wget -q https://raw.githubusercontent.com/otrl/aws-rail-deployment-scripts/docker/entrypoint bin/entrypoint
+ mkdir bin
+ wget -q https://raw.githubusercontent.com/otrl/aws-rail-deployment-scripts/docker/entrypoint -O bin/entrypoint
  downloaded_entrypoint="true"
 fi
 
