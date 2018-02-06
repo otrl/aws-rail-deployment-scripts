@@ -7,6 +7,7 @@ if [ -z "${otrl_service_name+x}" ]; then
  exit 1
 fi
 
+export NODE_IP=`ip route | awk '/default/ { print $3 }'`
 
 #Generate the ${otrl_service_name} config file
 mkdir -p /etc/${otrl_service_name}/conf.d/
@@ -40,8 +41,8 @@ if [ "$SERVICE_LOG_LEVEL" ]; then
 fi
  
 
-#Logs to stdout
-ln -sf /dev/stdout /var/log/${otrl_service_name}/${otrl_service_name}.log 
+#Logs to PID 1 stdout
+ln -sf /proc/1/fd/1 /var/log/${otrl_service_name}/${otrl_service_name}.log
 
 #Run ${otrl_service_name}
 exec /usr/share/${otrl_service_name}/bin/${otrl_service_name}

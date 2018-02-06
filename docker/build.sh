@@ -61,8 +61,9 @@ shift $((OPTIND -1))
 ###################################
 # Entrypoint script
 
-if [ ! -f "entrypoint" ]; then
- wget -q https://raw.githubusercontent.com/otrl/aws-rail-deployment-scripts/docker/entrypoint entrypoint.tmp
+if [ ! -f "bin/entrypoint" ]; then
+ wget -q https://raw.githubusercontent.com/otrl/aws-rail-deployment-scripts/docker/entrypoint bin/entrypoint
+ downloaded_entrypoint="true"
 fi
 
 
@@ -81,7 +82,9 @@ echo
 
 docker build --build-arg package_version="$package_version" -t ${ecs_host}/${container_name} .
 
-rm -f entrypoint.tmp
+if [ "$downloaded_entrypoint" == "true" ]; then
+ rm -f bin/entrypoint
+fi
 
 
 ###################################
