@@ -37,9 +37,13 @@ fi
 
 
 if [ "$SERVICE_LOG_LEVEL" ]; then
- sed -i "s/WARN/${SERVICE_LOG_LEVEL}/g" /etc/${otrl_service_name}/logback.xml
+ sed -i "s/INFO|DEBUG|TRACE/${SERVICE_LOG_LEVEL}/g" /etc/${otrl_service_name}/logback.xml
 fi
  
+#Change logging to stdout
+sed -i "s/async-file/console/g" /etc/${otrl_service_name}/logback.xml
+sed -i '/appender-ref ref="syslog"/d' /etc/${otrl_service_name}/logback.xml
+
 
 #Logs to PID 1 stdout
 ln -sf /proc/1/fd/1 /var/log/${otrl_service_name}/${otrl_service_name}.log
