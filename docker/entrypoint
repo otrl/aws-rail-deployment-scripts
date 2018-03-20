@@ -37,7 +37,7 @@ fi
 
 
 if [ "$SERVICE_LOG_LEVEL" ]; then
- sed -i "s/INFO|DEBUG|TRACE/${SERVICE_LOG_LEVEL}/g" /etc/${otrl_service_name}/logback.xml
+ sed -i "s/INFO\|DEBUG\|TRACE\|WARN\|ERROR/${SERVICE_LOG_LEVEL}/g" /etc/${otrl_service_name}/logback.xml
 fi
  
 #Change logging to stdout
