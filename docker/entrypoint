@@ -42,7 +42,9 @@ fi
  
 #Change logging to stdout
 sed -i "s/async-file/console/g" /etc/${otrl_service_name}/logback.xml
+sed -i 's/appender-ref ref="file"/appender-ref ref="console"/g' /etc/${otrl_service_name}/logback.xml
 sed -i '/appender-ref ref="syslog"/d' /etc/${otrl_service_name}/logback.xml
+
 
 
 #Logs to PID 1 stdout
