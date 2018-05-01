@@ -37,9 +37,9 @@ fi
 
 
 if [ "$SERVICE_LOG_LEVEL" ]; then
- sed -i "s/INFO\|DEBUG\|TRACE\|WARN\|ERROR/${SERVICE_LOG_LEVEL}/g" /etc/${otrl_service_name}/logback.xml
+ sed -i -E "s/name=\"io.otrl\" level=\"[A-Z]+\"/name=\"io.otrl\" level=\"${SERVICE_LOG_LEVEL}\"/g" /etc/${otrl_service_name}/logback.xml
 fi
- 
+
 #Change logging to stdout
 sed -i "s/async-file/console/g" /etc/${otrl_service_name}/logback.xml
 sed -i 's/appender-ref ref="file"/appender-ref ref="console"/g' /etc/${otrl_service_name}/logback.xml
