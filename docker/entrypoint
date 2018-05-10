@@ -38,6 +38,7 @@ fi
 
 if [ "$SERVICE_LOG_LEVEL" ]; then
  sed -i -E "s/name=\"io.otrl\" level=\"[A-Z]+\"/name=\"io.otrl\" level=\"${SERVICE_LOG_LEVEL}\"/g" /etc/${otrl_service_name}/logback.xml
+ sed -i -E "s/level=\"\\$\{rootLevel:-[A-Z]+\}\"/level=\"${SERVICE_LOG_LEVEL}\"/g" /etc/${otrl_service_name}/logback.xml
 fi
 
 #Change logging to stdout
