@@ -1,0 +1,117 @@
+#!/usr/bin/perl
+
+=pod
+ 
+=head1 cmdaemon - Command Daemon
+ 
+This is a simple TCP listening daemon (using core Perl modules)
+which listens on a user-defined port for an HTTP POST.
+When it recieves the POST it will run a user-defined command
+and pass the (sanitised) POST parameters as arguments to the 
+command.
+
+The port and command are set via environmental variables based
+on the upper-cased name of the script, followed by _PORT and 
+_COMMAND.  i.e. if the script is run as F<cmdaemon> then the 
+varibles to set are B<CMDAEMON_PORT> and B<CMDAEMON_COMMAND>.
+
+=cut
+
+use strict;
+use POSIX qw(strftime);
+use IO::Socket;
+use IPC::Run qw(run);
+use File::Basename;
+
+my $program_name=basename($0);
+my $program_var=uc($program_name);
+
+#Characters allowed in the command arguments.
+#Any other characters taken from the POST parameters
+#will be stripped.
+my $allowed_characters='a-zA-Z0-9\'\-\ _:=';
+
+my $port_var="${program_var}_PORT";
+my $command_var="${program_var}_COMMAND";
+my $port = $ENV{$port_var};
+my $command = $ENV{$command_var};
+
+###
+
+if (!$port or !$command) {
+ print "Can't run because some environmental variables weren't set:\n${port_var}=${port} ${command_var}=${command}\n";
+ exit(1);
+}
+
+####
+
+$| = 1;
+my $socket = new IO::Socket::INET (
+    LocalHost => '0.0.0.0',
+    LocalPort => $port,
+    Proto => 'tcp',
+    Listen => 5,
+    Reuse => 1
+) or die "cannot create socket $!\n";
+
+print("Started $program_name on port $port\n\n");
+
+while(1) {
+
+ my $client = $socket->accept();
+ $client->recv(my $client_request, 1024);
+ my @requests = split /\n/, $client_request;
+
+ my $client_address = $client->peerhost();
+ my $initial_header = $requests[0];
+ $initial_header =~ s/[^a-zA-Z0-9_: \.\/]+//g;
+ print strftime("%F %T", localtime);
+ 
+ my $this_request = urldecode($requests[-1]);
+ $this_request =~ s/&/:::/g;
+ $this_request =~ s/[^$allowed_characters]+//g;
+ 
+ print " - $client_address - $initial_header - $this_request - ";
+
+ if (grep(/^POST \/ HTTP/, @requests)) {
+
+  my @arguments;
+
+  my @params = split /:::/, $this_request;
+  foreach my $param (@params) {
+   push @arguments, $param;
+  }
+
+  print "200\n";
+  $client->send("HTTP/1.0 200 OK\nContent-Type: text/plain\r\n\n");
+
+  my @this_cmd=($command, @arguments);
+  open(my $pipe, '-|', @this_cmd) or die("Can't launch $command: $!\n");
+
+  while (defined( my $line = <$pipe> )) {
+   $client->send($line);
+  }
+
+
+ }
+ else {
+  print "405\n";
+  $client->send("HTTP/1.0 405 Method Not Allowed\r\n");
+ }
+
+ shutdown($client, 1);
+}
+
+$socket->close();
+
+exit(0);
+
+
+####
+
+sub urldecode {
+    my $s = shift;
+    $s =~ s/\%([A-Fa-f0-9]{2})/pack('C', hex($1))/seg;
+    $s =~ s/\+/ /g;
+    return $s;
+}
