@@ -1,19 +1,23 @@
 #!/usr/bin/perl
 
 =pod
- 
+
 =head1 cmdaemon - Command Daemon
- 
+
 This is a simple TCP listening daemon (using core Perl modules)
 which listens on a user-defined port for an HTTP POST.
 When it recieves the POST it will run a user-defined command
-and pass the (sanitised) POST parameters as arguments to the 
+and pass the (sanitised) POST parameters as arguments to the
 command.
 
 The port and command are set via environmental variables based
-on the upper-cased name of the script, followed by _PORT and 
-_COMMAND.  i.e. if the script is run as F<cmdaemon> then the 
+on the upper-cased name of the script, followed by _PORT and
+_COMMAND.  i.e. if the script is run as F<cmdaemon> then the
 varibles to set are B<CMDAEMON_PORT> and B<CMDAEMON_COMMAND>.
+You can also set B<CMDAEMON_IDLE_TIMEOUT> (in seconds) to set
+the idle timeout when running the command - if there's no more
+output for this number of seconds then the command is killed.
+The default is 60s.
 
 =cut
 
@@ -32,8 +36,12 @@ my $allowed_characters='a-zA-Z0-9\'\-\ _:=';
 
 my $port_var="${program_var}_PORT";
 my $command_var="${program_var}_COMMAND";
+my $timeout_var = "${program_var}_IDLE_TIMEOUT";
+
 my $port = $ENV{$port_var};
 my $command = $ENV{$command_var};
+my $idle_timeout = $ENV{$timeout_var} ? $ENV{$timeout_var} : 60;
+
 
 ###
 
@@ -42,7 +50,7 @@ if (!$port or !$command) {
  exit(1);
 }
 
-####
+###
 
 $| = 1;
 my $socket = new IO::Socket::INET (
@@ -53,7 +61,10 @@ my $socket = new IO::Socket::INET (
     Reuse => 1
 ) or die "cannot create socket $!\n";
 
-print("Started $program_name on port $port\n\n");
+print "[$program_name] - " . strftime("%F %T", localtime) . " - Started $program_name ... port: $port, idle timeout: $idle_timeout, command: $command\n";
+
+
+$SIG{ALRM} = sub { die "timeout" };
 
 while(1) {
 
@@ -67,7 +78,7 @@ while(1) {
  my $this_request = urldecode($requests[-1]);
  $this_request =~ s/&/:::/g;
  $this_request =~ s/[^$allowed_characters]+//g;
- 
+
  print "[${program_name}] - ";
  print strftime("%F %T", localtime);
  print " - $client_address - $initial_header - $this_request - ";
@@ -86,10 +97,42 @@ while(1) {
 
   my @this_cmd = split / /, $command;
   push(@this_cmd, @arguments);
-  open(my $pipe, '-|', @this_cmd) or die("Can't launch command: @this_cmd: $!\n");
 
-  while (defined( my $line = <$pipe> )) {
-   $client->send($line);
+  my $child_pid;
+  my $cmd_pipe;
+
+  ##### Eval block to allow us to set a timeout on the running of the command.
+
+  eval {
+
+   alarm($idle_timeout);
+   $child_pid = open($cmd_pipe, '-|', @this_cmd) or die("Can't launch command: @this_cmd: $!\n");
+
+   while (defined( my $line = <$cmd_pipe> )) {
+    $client->send($line);
+    alarm($idle_timeout);
+   }
+
+   alarm(0);
+   close($cmd_pipe);
+
+  };
+
+  #### If there was a timeout or the eval block errored...
+  if ($@) {
+   if ($@ =~ /timeout/) {
+    kill 'TERM', $child_pid;
+     close($cmd_pipe);
+     print "[$program_name] - ";
+     print strftime("%F %T", localtime);
+     print " - WARNING - Killed idle command process after $idle_timeout seconds\n";
+     $client->send("WARNING: reached idle timeout ($idle_timeout seconds)\n\n");
+   }
+   else {
+    #Propagate a more serious error
+    alarm(0);
+    die;
+   }
   }
 
 
