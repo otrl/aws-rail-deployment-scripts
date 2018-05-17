@@ -20,7 +20,6 @@ varibles to set are B<CMDAEMON_PORT> and B<CMDAEMON_COMMAND>.
 use strict;
 use POSIX qw(strftime);
 use IO::Socket;
-use IPC::Run qw(run);
 use File::Basename;
 
 my $program_name=basename($0);
