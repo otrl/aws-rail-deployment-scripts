@@ -50,7 +50,7 @@ sed -i '/appender-ref ref="syslog"/d' /etc/${otrl_service_name}/logback.xml
 ln -sf /proc/1/fd/1 /var/log/${otrl_service_name}/${otrl_service_name}.log
 
 #Run cmdaemon if it exists and the variables are set
-if [ -f "/usr/local/bin/cmdaemon"] && [ "$CMDAEMON_COMMAND" ] && [ "$CMDAEMON_PORT" ]; then
+if [ -f "/usr/local/bin/cmdaemon" ] && [ "$CMDAEMON_COMMAND" ] && [ "$CMDAEMON_PORT" ]; then
  /usr/local/bin/cmdaemon >/proc/1/fd/1 2>&1 &
 fi
 
