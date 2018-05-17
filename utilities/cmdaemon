@@ -64,12 +64,12 @@ while(1) {
  my $client_address = $client->peerhost();
  my $initial_header = $requests[0];
  $initial_header =~ s/[^a-zA-Z0-9_: \.\/]+//g;
- print strftime("%F %T", localtime);
- 
  my $this_request = urldecode($requests[-1]);
  $this_request =~ s/&/:::/g;
  $this_request =~ s/[^$allowed_characters]+//g;
  
+ print "[${program_name}] - ";
+ print strftime("%F %T", localtime);
  print " - $client_address - $initial_header - $this_request - ";
 
  if (grep(/^POST \/ HTTP/, @requests)) {
