@@ -5,7 +5,6 @@ use warnings;
 use Date::Format;
 use Time::Piece;
 use File::Basename;
-use Data::Dumper;
 use VM::EC2;
 
 my $AWS_KEY = $ENV{'AWS_ACCESS_KEY_ID'};
@@ -39,7 +38,6 @@ foreach my $i (@ec2_instances) {
   my $this_name = $i->tags->{build};
   
   $instances{$this_name}{'ip'} = $i->privateIpAddress;
-  $instances{$this_name}{'original_name'} = $i->tags->{original_name};
   $instances{$this_name}{'owner'} = $i->tags->{launched_by_name} || 'Unknown';
 
   #Fetch the hostname tag from the instance.  If there isn't one,
@@ -55,10 +53,13 @@ foreach my $i (@ec2_instances) {
   };
 
   #Time stuff
-  my $this_tp = Time::Piece->strptime(substr($i->tags->{launch_time},0,-5), '%Y-%m-%dT%H:%M:%S');
+  my $this_tp = Time::Piece->strptime(substr($i->launchTime,0,-5), '%Y-%m-%dT%H:%M:%S');
   $instances{$this_name}{'created'} = $this_tp->strftime('%a %e %b, %H:%M %P');
   my $days = $now - $this_tp;
-  $instances{$this_name}{'age'} = int($days->days);
+  my $age = int($days->days);
+  
+  $instances{$this_name}{'age'} = $age == 1 ? "$age day" : "$age days";
+  
   if ( !defined $i->tags->{no_age_alert} ) {
    $instances{$this_name}{'tr_class'} = "";
    if (int($days->days) >= $days_until_warning ) { $instances{$this_name}{'tr_class'} = 'warning'; }
@@ -122,7 +123,7 @@ sub make_row {
                 </li>
                 <li><i class="glyphicon glyphicon-globe"></i> {{ ip }}</li>
                 <li><i class="glyphicon glyphicon-user"></i> {{ owner }}</li>
-                <li><i class="glyphicon glyphicon-time"></i> {{ age }} days</li>
+                <li><i class="glyphicon glyphicon-time"></i> {{ age }} </li>
                 <li><i class="glyphicon glyphicon-calendar"></i> {{ created }}</li>
             </ul>
             {{{ terminate_button }}}
@@ -138,11 +139,11 @@ sub terminate_button_html {
     my $template = <<'TERMINATE_BUTTON';
     <form method="post" target="jenkins" action="{{ job }}/buildWithParameters">
      <input type="hidden" name="token" value="zWZS0cMc27QuDbcAboQltuOOBvOPoPuq">
-     <input type="hidden" name="NAME" value="{{ name }}">
+     <input type="hidden" name="BUILD_NAME" value="{{ name }}">
      <button type="submit"
              class="btn btn-sm btn-block btn-warning"
              onclick="return confirm('Are you sure you want to destroy the **{{ name }}** envirionment?')">
-      Terminate<i class="glyphicon glyphicon-trash"></i>
+      Terminate&nbsp;<i class="glyphicon glyphicon-trash"></i>
      </button>
     </form>
 TERMINATE_BUTTON
@@ -203,8 +204,7 @@ __DATA__
            within a few seconds. Please only press the button once - the job <i>is</i> running.
        </div>
 
-       <!--<iframe name="jenkins" class="hide" onload="onIframeLoaded(this)"></iframe>-->
-       <iframe name="jenkins" width="10" height="10" onload="onIframeLoaded(this)"></iframe>
+       <iframe name="jenkins" class="hide" onload="onIframeLoaded(this)"></iframe>
        <table class="table table-bordered table-hover table-condensed">
            <tr class="hidden-xs hidden-sm">
                <th class="text-center">Instance name</th>
