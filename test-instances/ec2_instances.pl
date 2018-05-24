@@ -33,7 +33,7 @@ my @ec2_instances = $ec2->describe_instances({'tag:role' => 'test'});
 my %instances;
 
 foreach my $i (@ec2_instances) {
- if ($i->tags->{build} $i->current_status eq 'running') {
+ if ($i->tags->{build} and $i->current_status eq 'running') {
   
   my $this_name = $i->tags->{build};
   
