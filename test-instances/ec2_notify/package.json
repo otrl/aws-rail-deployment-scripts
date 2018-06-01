@@ -1,0 +1,19 @@
+{
+  "name": "scripts",
+  "version": "1.0.0",
+  "description": "ec2 notify",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "2.248.1",
+    "axios": "0.16.1",
+    "get-stdin": "5.0.1",
+    "heredocument": "2.0.2",
+    "lodash": "4.17.4",
+    "moment": "2.18.1"
+  }
+}
