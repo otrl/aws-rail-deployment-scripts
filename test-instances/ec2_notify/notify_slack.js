@@ -118,7 +118,7 @@ const formatMessage = (meta) => {
     const links = [
         ['https://jenkins.otrl.io/job/sniffles-deploy/build?delay=0sec', 'create'],
         ['https://jenkins.otrl.io/job/sniffles-destroy/build?delay=0sec', 'terminate'],
-        ['https://jenkins.otrl.io/job/Test%20Instances/ws/util/instances.html', 'full listing']
+        ['https://jenkins.otrl.io/job/Test%20Instances/ws/instances.html', 'full listing']
     ];
     return getCatGif()
         .then(gifUrl => ({
