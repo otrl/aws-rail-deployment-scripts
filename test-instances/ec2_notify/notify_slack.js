@@ -7,7 +7,6 @@
 const _ = require('lodash');
 const fp = require('lodash/fp');
 const moment = require('moment');
-const getStdin = require('get-stdin');
 const heredoc = require('heredocument');
 const axios = require('axios');
 const ec2 = require('aws-sdk/clients/ec2');
