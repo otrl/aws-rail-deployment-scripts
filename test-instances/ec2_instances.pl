@@ -57,9 +57,9 @@ foreach my $i (@ec2_instances) {
   $instances{$this_name}{'created'} = $this_tp->strftime('%a %e %b, %H:%M %P');
   my $days = $now - $this_tp;
   my $age = int($days->days);
-  
+
   $instances{$this_name}{'age'} = $age == 1 ? "$age day" : "$age days";
-  
+
   if ( !defined $i->tags->{no_age_alert} ) {
    $instances{$this_name}{'tr_class'} = "";
    if (int($days->days) >= $days_until_warning ) { $instances{$this_name}{'tr_class'} = 'warning'; }
@@ -168,19 +168,6 @@ __DATA__
   <title>Running EC2 instances</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
-  <script>
-      function onIframeLoaded (iframe) {
-          var hasLoadedIframe;
-          try {
-              hasLoadedIframe = !!iframe.contentWindow.location.hostname;
-          } catch (e) { // failed when run locally because cross origin
-              hasLoadedIframe = true;
-          }
-          if (hasLoadedIframe) {
-              location.href="{{ jenkins_terminate_job }}";
-          }
-      }
-  </script>
  </head>
  <body>
    <div class="container">
@@ -204,7 +191,6 @@ __DATA__
            within a few seconds. Please only press the button once - the job <i>is</i> running.
        </div>
 
-       <iframe name="jenkins" class="hide" onload="onIframeLoaded(this)"></iframe>
        <table class="table table-bordered table-hover table-condensed">
            <tr class="hidden-xs hidden-sm">
                <th class="text-center">Instance name</th>
@@ -225,6 +211,24 @@ __DATA__
            jQuery("time.timeago").timeago();
          });
        }
+
+       (function initialiseIframe () {
+           var iframe = document.createElement('iframe');
+           iframe.setAttribute('src', 'about:blank');
+           iframe.setAttribute('name', 'jenkins');
+           iframe.setAttribute('class', 'hide');
+           iframe.addEventListener('load', function () {
+               try {
+                   hasLoadedIframe = !!iframe.contentWindow.location.hostname;
+               } catch (e) { // failed when run locally because cross origin
+                   hasLoadedIframe = false;
+               }
+               if (hasLoadedIframe) {
+                   location.href="{{ jenkins_terminate_job }}";
+               }
+           });
+           document.body.append(iframe);
+       })();
    </script>
  </body>
 </html>

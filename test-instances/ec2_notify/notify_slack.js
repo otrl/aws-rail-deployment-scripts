@@ -3,30 +3,43 @@
  * Script to send a message on slack showing which EC2 test instances are running
  *
  * Usage: ./notify_slack.js
+ * Required environment variables:
+ * - AWS_ACCESS_KEY_ID
+ * - AWS_SECRET_ACCESS_KEY
+ * - SLACK_WEBHOOK_URL
  */
 const _ = require('lodash');
 const fp = require('lodash/fp');
 const moment = require('moment');
-const getStdin = require('get-stdin');
 const heredoc = require('heredocument');
 const axios = require('axios');
 const ec2 = require('aws-sdk/clients/ec2');
 
+checkRequiredEnvVars(
+    'AWS_ACCESS_KEY_ID',
+    'AWS_SECRET_ACCESS_KEY',
+    'SLACK_WEBHOOK_URL'
+);
+
 const AWS_REGION = 'eu-west-1'
-const { AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY } = process.env;
-if (!AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY) {
-    console.error("The environmental variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY need to be set.");
-    process.exit(1);
-}
 
 const instanceDayPrice = 700;
 const slackConfig = {
-    url: 'https://hooks.slack.com/services/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',
+    url: process.env.SLACK_WEBHOOK_URL,
     channel: '#dev',
     username: 'Tiddles',
     icon_emoji: ':cat2:'
 };
+
 const catApiUrl = 'http://thecatapi.com/api/images/get?format=src&type=gif';
+
+function checkRequiredEnvVars (...vars) {
+    const missing = vars.filter(v => !process.env[v]);
+    if (missing.length) {
+        console.error(`ERROR: Missing required environment variables: ${missing.join(', ')}`);
+        process.exit(1);
+    }
+}
 
 const getDaysSince = (dateStr) => moment().diff(moment(dateStr), 'days');
 
