@@ -20,7 +20,7 @@
 ####################################################
 
 FAILURE_VULNERABILITY_LEVEL="High"
-CLAIR_SCANN_ER_VERSION="v8"
+CLAIR_SCANNER_VERSION="v8"
 
 ####################################################
 
@@ -61,7 +61,7 @@ echo "Fetching clair_scanner from github..."
 ##
 ## curl -s https://api.github.com/repos/arminc/clair-scanner/releases/latest | grep "browser_download_url.*clair-scanner_linux_amd64" | cut -d : -f 2,3 | tr -d \" | wget -O /tmp/clair_scanner -qi -
 
-wget -O /tmp/clair_scanner -q https://github.com/arminc/clair-scanner/releases/download/v8/clair-scanner_linux_amd64
+wget -O /tmp/clair_scanner -q https://github.com/arminc/clair-scanner/releases/download/${CLAIR_SCANNER_VERSION}/clair-scanner_linux_amd64
 if [ "$?" -ne "0" ]; then echo; echo "Failed to download clair-scanner."; echo; exit 1; fi
 chmod +x /tmp/clair_scanner
 
