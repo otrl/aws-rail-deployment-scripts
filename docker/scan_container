@@ -62,7 +62,7 @@ echo "Launching clair-local-scan..."
 docker run -p 6060:6060 --link db:postgres -d --name clair arminc/clair-local-scan:v2.0.4
 
 echo "Scanning $IMAGE_TO_SCAN..."
-/tmp/clair_scanner -t $FAILURE_VULNERABILITY_LEVEL --ip=172.17.0.1 -w /tmp/whitelist.yml $IMAGE_TO_SCAN
+/tmp/clair_scanner -t $FAILURE_VULNERABILITY_LEVEL --ip=172.17.0.1 -w /tmp/whitelist.yml $IMAGE_TO_SCAN 2>&1
 
 
 if [ "$?" -ne "0" ]; then
