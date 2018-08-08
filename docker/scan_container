@@ -20,6 +20,7 @@
 ####################################################
 
 FAILURE_VULNERABILITY_LEVEL="High"
+CLAIR_SCANN_ER_VERSION="v8"
 
 ####################################################
 
@@ -52,7 +53,16 @@ echo "Creating the CVE whitelist..."
 render_whitelist
 
 echo "Fetching clair_scanner from github..."
-curl -s https://api.github.com/repos/arminc/clair-scanner/releases/latest | grep "browser_download_url.*clair-scanner_linux_amd64" | cut -d : -f 2,3 | tr -d \" | wget -O /tmp/clair_scanner -qi -
+
+## Trying to get the latest version of clair_scanner didn't work because we kept hitting API rate limits
+## (everyone on Travis is probably trying the same thing).  So we've got a hard-coded version for the moment.
+## However, authenticated requests have a higher rate, so in the future we could use an authentication
+## token to get the info.  The script below will download the latest version:
+##
+## curl -s https://api.github.com/repos/arminc/clair-scanner/releases/latest | grep "browser_download_url.*clair-scanner_linux_amd64" | cut -d : -f 2,3 | tr -d \" | wget -O /tmp/clair_scanner -qi -
+
+wget -O /tmp/clair_scanner -q https://github.com/arminc/clair-scanner/releases/download/v8/clair-scanner_linux_amd64
+if [ "$?" -ne "0" ]; then echo; echo "Failed to download clair-scanner."; echo; exit 1; fi
 chmod +x /tmp/clair_scanner
 
 echo "Launching the latest Clair DB..."
