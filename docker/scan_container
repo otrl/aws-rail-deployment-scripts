@@ -56,7 +56,7 @@ curl -s https://api.github.com/repos/arminc/clair-scanner/releases/latest | grep
 chmod +x /tmp/clair_scanner
 
 echo "Launching the latest Clair DB..."
-docker run -p 5432:5432 -d --name db arminc/clair-db:latest
+docker run -d --name db arminc/clair-db:latest
 
 echo "Launching clair-local-scan..."
 docker run -p 6060:6060 --link db:postgres -d --name clair arminc/clair-local-scan:v2.0.4
