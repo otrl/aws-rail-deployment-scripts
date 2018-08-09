@@ -3,7 +3,8 @@
 
 #This script is called as part of a Travis build.  After a container image is build
 #via 'docker build' we use this to scan the image for vulnerabilities using a local
-#version of Clair.  The scan is run before the image is pushed to the Docker repository.
+#version of Clair and then for malware using ClamAV.
+#The scan is run before the image is pushed to the Docker repository.
 #
 #The name of the local image is passed via the environment variable IMAGE_TO_SCAN
 #
@@ -50,10 +51,11 @@ if [ -z "$IMAGE_TO_SCAN" ]; then
 fi
 
 echo "Creating the CVE whitelist..."
+echo
 render_whitelist
 
 echo "Fetching clair_scanner from github..."
-
+echo 
 ## Trying to get the latest version of clair_scanner didn't work because we kept hitting API rate limits
 ## (everyone on Travis is probably trying the same thing).  So we've got a hard-coded version for the moment.
 ## However, authenticated requests have a higher rate, so in the future we could use an authentication
@@ -66,21 +68,45 @@ if [ "$?" -ne "0" ]; then echo; echo "Failed to download clair-scanner."; echo; 
 chmod +x /tmp/clair_scanner
 
 echo "Launching the latest Clair DB..."
+echo
 docker run -d --name db arminc/clair-db:latest
 
 echo "Launching clair-local-scan..."
+echo
 docker run -p 6060:6060 --link db:postgres -d --name clair arminc/clair-local-scan:v2.0.4
 
 echo "Scanning $IMAGE_TO_SCAN..."
+echo
 /tmp/clair_scanner -t $FAILURE_VULNERABILITY_LEVEL --ip=172.17.0.1 -w /tmp/whitelist.yml $IMAGE_TO_SCAN 2>&1
 
 
 if [ "$?" -ne "0" ]; then
  echo
- echo "This image failed the vulnerability scan."
+ echo "This image failed the Clair vulnerability scan."
  echo
  exit 1
 fi
 
 
+echo "Installing ClamAV..."
+echo
+sudo apt-get install -y clamav
 
+echo "Updating malware database..."
+echo
+sudo freshclam --quiet
+
+echo "Fetching image filesystem to scan..."
+echo
+docker image save ${IMAGE_TO_SCAN} > /tmp/to_scan.tar
+
+echo "Scanning filesystem for malware..."
+echo
+clamscan -a --max-filesize=4095M --max-scansize=4095M /tmp/to_scan.tar
+
+if [ "$?" -ne "0" ]; then
+ echo
+ echo "This image failed the ClamAV malware scan."
+ echo
+ exit 1
+fi
