@@ -39,12 +39,10 @@ function monitor_restart () {
    secs_waited=$((secs_waited+${restart_monitor_sleep}))
 
    this_status=`docker $docker_opts service inspect --format "{{.UpdateStatus.State}}" $this_service`
-   echo -ne "Status: $this_status :: Waited: ${secs_waited} secs     \r"
+   echo "Status: $this_status :: Waited: ${secs_waited} secs"
    if [[ "$this_status" =~ completed ]]; then restarted="true"; fi
 
  done
- 
- echo
 
  if [ "$secs_waited" -ge "$restart_monitor_timeout" ]; then
 
