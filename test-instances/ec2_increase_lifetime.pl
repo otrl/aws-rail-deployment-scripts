@@ -42,9 +42,9 @@ print "Searching for $instance_name\n";
 
 my @ec2_instances = $ec2->describe_instances({'tag:role' => 'test', 'tag:terminate_after' => '*', 'tag:build' => $instance_name}) or die("Can't connect to AWS or no instances found.");
 my $i = $ec2_instances[0];
+$expires = Time::Piece->strptime(substr($i->tags->{terminate_after},0,-5), '%Y-%m-%dT%H:%M:%S');
 
-print $i->tags->{Name};
-my $expires = Time::Piece->strptime(substr($i->tags->{terminate_after},0,-5), '%Y-%m-%dT%H:%M:%S');
-print "  $expires -> ";
+print "\n\nUpdating the termination date for " . $i->tags->{Name} . " from $expires to ";
 $expires = $expires + (60 * 60 * $add_hours);
+print "$expires\n\n";
 $i->add_tags( terminate_after => $expires->datetime . "Z") or die("Can't update the terminate_after tag value.");
