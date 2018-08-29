@@ -57,9 +57,9 @@ foreach my $i (@ec2_instances) {
    my $expires = Time::Piece->strptime(substr($i->tags->{terminate_after},0,-5), '%Y-%m-%dT%H:%M:%S');
    my $expires_diff = $expires - $now;
    my $expires_days = int($expires_diff->days);
-   my $expires_text = "In $expires_days day";
+   my $expires_text = "$expires_days day";
    if ($expires_days ne 1) { $expires_text .= "s"; }
-   $expires_text .= " (<a href='${reprieve_url}$this_name'>extend instance life</a>)";
+   $expires_text .= "left.<br>(<a href='${reprieve_url}$this_name'>extend instance life</a>)";
    $instances{$this_name}{'expires'} = $expires_text;
   }
   else {
@@ -140,7 +140,7 @@ sub make_row {
                 <li><i class="glyphicon glyphicon-user"></i> {{ owner }}</li>
                 <li><i class="glyphicon glyphicon-time"></i> {{ age }} </li>
                 <li><i class="glyphicon glyphicon-calendar"></i> {{ created }}</li>
-                <li><i class="glyphicon glyphicon-calendar"></i> {{ expires }}</li>
+                <li><i class="glyphicon glyphicon-fire"></i> {{ expires }}</li>
             </ul>
             {{{ terminate_button }}}
         </td>
@@ -214,6 +214,7 @@ __DATA__
                <th class="text-center">Created by</th>
                <th class="text-center">Created</th>
                <th class="text-center">IP</th>
+               <th class="text-center">Expires in..</th>
                <th></th>
            </tr>
            {{{ table_rows }}}
