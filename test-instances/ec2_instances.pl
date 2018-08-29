@@ -59,7 +59,7 @@ foreach my $i (@ec2_instances) {
    my $expires_days = int($expires_diff->days);
    my $expires_text = "$expires_days day";
    if ($expires_days ne 1) { $expires_text .= "s"; }
-   $expires_text .= "left.<br>(<a href='${reprieve_url}$this_name'>extend instance life</a>)";
+   $expires_text .= " left.<br>(<a href='${reprieve_url}$this_name'>extend instance life</a>)";
    $instances{$this_name}{'expires'} = $expires_text;
   }
   else {
