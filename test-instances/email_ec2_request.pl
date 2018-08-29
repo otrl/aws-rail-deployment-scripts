@@ -1,11 +1,11 @@
 #!/usr/bin/perl
 
-#Send an email to each person that's spun-up EC2 instances
-#with a list of their instances that have been running for
-#at least a certain number of days.  The number of days can
-#be passed as an argument.  e.g.:
+#Send an email to each person to remind them of instances that will be automatically
+#terminated in the near future.
+#The default is eight days - this can be overridden by passing the number of days
+#as an argument to the script:
 #
-#./ec2_instances_email.pl 5
+#./email_ec2_request.pl 5
 
 use strict;
 use warnings;
@@ -14,7 +14,7 @@ use Time::Piece;
 use MIME::Lite;
 use VM::EC2;
 
-my $warn_days_before_termination = 9;
+my $warn_days_before_termination = 8;
 my $from_email = 'jenkins@otrl.io';
 my $ignore_owner = 'dev@otrl.io';
 my $reprieve_url = 'https://jenkins.otrl.io/job/extend_instance_life/parambuild?instance_name=';
@@ -64,7 +64,7 @@ foreach my $i (@ec2_instances) {
   
   my $expires = Time::Piece->strptime(substr($i->tags->{terminate_after},0,-5), '%Y-%m-%dT%H:%M:%S');
   my $expires_diff = $expires - $now;
-  my $expires_days = int($expires_diff->days) + 1;
+  my $expires_days = int($expires_diff->days);
 
   if ($expires_days <= $warn_days_before_termination) { 
    $owners{$this_owner}{$this_name}{'age'} = $running_days;
@@ -81,7 +81,7 @@ foreach my $owner (sort(keys %owners)) {
  my $this_subject = "[Jenkins EC2 report] You have $owned_instances running instance";
  if ($owned_instances != 1) { $this_subject .=  "s"; }
  
- my $this_msg = "<h3>EC2 instance report</h3><p>Here's a list of instances you launched that will be terminated soon:<br><p>\n";
+ my $this_msg = "<h3>EC2 instance termination warnings:</h3><p>Here's a list of instances you launched that will be terminated soon:<br><p>\n";
  $this_msg = "<ul>\n";
  
  foreach my $owned_instance (keys %{$owners{$owner}}) {

@@ -41,7 +41,7 @@ my $ec2 = VM::EC2->new( -access_key => $AWS_KEY,
 my @ec2_instances = $ec2->describe_instances({'tag:role' => 'test'}) or die("Can't connect to AWS");
 
 foreach my $i (@ec2_instances) {
- if ($i->tags->{build} and $i->current_status eq 'running' and $i->tags->{launched_by_email} ne $ignore_owner and $i->tags->{launched_by_email} ne "") {
+ if ($i->tags->{build} and $i->current_status eq 'running' and $i->tags->{launched_by_email} ne $ignore_owner and $i->tags->{launched_by_email} ne "" and !$i->tags->{terminate_after}) {
 
   my $this_owner = $i->tags->{launched_by_email};
   my $this_name  = $i->tags->{build};

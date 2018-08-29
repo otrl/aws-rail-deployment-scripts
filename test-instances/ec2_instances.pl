@@ -10,6 +10,7 @@ use VM::EC2;
 my $AWS_KEY = $ENV{'AWS_ACCESS_KEY_ID'};
 my $AWS_SECRET = $ENV{'AWS_SECRET_ACCESS_KEY'};
 my $AWS_REGION = "eu-west-1";
+my $reprieve_url = 'https://jenkins.otrl.io/job/extend_instance_life/parambuild?instance_name=';
 
 if (!$AWS_KEY or !$AWS_SECRET) {
  print "The environmental variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY need to be set.\n";
@@ -51,6 +52,19 @@ foreach my $i (@ec2_instances) {
    $this_hostname =~ s/_/-/g;
    $instances{$this_name}{'hostname'} = $default_site . "." . $this_hostname . "." . $default_domain;
   };
+
+  if ($i->tags->{terminate_after}) {
+   my $expires = Time::Piece->strptime(substr($i->tags->{terminate_after},0,-5), '%Y-%m-%dT%H:%M:%S');
+   my $expires_diff = $expires - $now;
+   my $expires_days = int($expires_diff->days);
+   my $expires_text = "In $expires_days day";
+   if ($expires_days ne 1) { $expires_text .= "s"; }
+   $expires_text .= " (<a href='${reprieve_url}$this_name'>extend instance life</a>)";
+   $instances{$this_name}{'expires'} = $expires_text;
+  }
+  else {
+   $instances{$this_name}{'expires'} = "n/a";
+  }
 
   #Time stuff
   my $this_tp = Time::Piece->strptime(substr($i->launchTime,0,-5), '%Y-%m-%dT%H:%M:%S');
@@ -108,6 +122,7 @@ sub make_row {
         <td class="text-center">{{ owner }}</td>
         <td class="text-center">{{ created }}</td>
         <td class="text-center">{{ ip }}</td>
+        <td class="text-center">{{ expires }}</td>
         <td>
             {{{ terminate_button }}}
         </td>
@@ -125,6 +140,7 @@ sub make_row {
                 <li><i class="glyphicon glyphicon-user"></i> {{ owner }}</li>
                 <li><i class="glyphicon glyphicon-time"></i> {{ age }} </li>
                 <li><i class="glyphicon glyphicon-calendar"></i> {{ created }}</li>
+                <li><i class="glyphicon glyphicon-calendar"></i> {{ expires }}</li>
             </ul>
             {{{ terminate_button }}}
         </td>

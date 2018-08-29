@@ -44,7 +44,7 @@ foreach my $i (@ec2_instances) {
 
   if ($terminate eq 1) {
     print " - terminate\n";
-    #$i->terminate;
+    $i->terminate;
   }
   else {
     print " - shut down.\n";
