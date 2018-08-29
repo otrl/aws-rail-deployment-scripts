@@ -57,7 +57,7 @@ foreach my $i (@ec2_instances) {
   
   #Time stuff
   
-  my $running_since = Time::Piece->strptime(substr($i->launchTime,0,-5), '%Y-%m-%dT%H:%M:%S');
+  my $running_since = Time::Piece->strptime(substr($i->tags->{launched_at},0,-5), '%Y-%m-%dT%H:%M:%S');
   my $running_since_diff = $running_since - $now;
   my $running_days = int($running_since_diff->days);
   if ($running_days eq 0) { $running_days="less than a"; }
@@ -85,9 +85,9 @@ foreach my $owner (sort(keys %owners)) {
  $this_msg = "<ul>\n";
  
  foreach my $owned_instance (keys %{$owners{$owner}}) {
-  $this_msg .= "<li> <b>$owned_instance</b>, running for ${owners{$owner}{$owned_instance}{'age'}} day";
+  $this_msg .= "<li> <b>$owned_instance</b>, created ${owners{$owner}{$owned_instance}{'age'}} days";
   if (${owners{$owner}{$owned_instance}{'age'}} eq "1") { chop($this_msg) }
-  $this_msg .= ", will be terminated on the evening of ${owners{$owner}{$owned_instance}{'expires_after'}}.";
+  $this_msg .= " ago will be terminated on the evening of ${owners{$owner}{$owned_instance}{'expires_after'}}.";
   $this_msg .= " <a href='${reprieve_url}$owned_instance'>Extend instance life</a>";
   $this_msg .= "</li>\n";
  }

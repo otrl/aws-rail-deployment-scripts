@@ -67,7 +67,13 @@ foreach my $i (@ec2_instances) {
   }
 
   #Time stuff
-  my $this_tp = Time::Piece->strptime(substr($i->launchTime,0,-5), '%Y-%m-%dT%H:%M:%S');
+  my $this_tp;
+  if ($i->tags->{launched_at}) {
+   $this_tp = Time::Piece->strptime(substr($i->tags->{launched_at},0,-5), '%Y-%m-%dT%H:%M:%S');
+  }
+  else {
+   $this_tp = Time::Piece->strptime(substr($i->launchTime,0,-5), '%Y-%m-%dT%H:%M:%S');
+  }
   $instances{$this_name}{'created'} = $this_tp->strftime('%a %e %b, %H:%M %P');
   my $days = $now - $this_tp;
   my $age = int($days->days);
