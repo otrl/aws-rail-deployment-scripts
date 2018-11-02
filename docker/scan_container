@@ -90,6 +90,7 @@ fi
 
 echo "Installing ClamAV..."
 echo
+sudo apt-get update
 sudo apt-get install -y clamav
 
 echo "Updating malware database..."
