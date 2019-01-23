@@ -32,6 +32,7 @@ cat <<EoF>/tmp/whitelist.yml
 generalwhitelist:
   CVE-2018-1000001: eglibc
   CVE-2016-2779: util-linux
+  CVE-2019-3462: apt
 
 EoF
 
