@@ -104,7 +104,7 @@ docker image save ${IMAGE_TO_SCAN} > /tmp/to_scan.tar
 
 echo "Scanning filesystem for malware..."
 echo
-clamscan -a --max-filesize=4095M --max-scansize=4095M /tmp/to_scan.tar
+clamscan -v -a --max-filesize=4095M --max-scansize=4095M /tmp/to_scan.tar
 
 if [ "$?" -ne "0" ]; then
  echo
