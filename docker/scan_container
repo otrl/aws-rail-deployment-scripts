@@ -33,6 +33,7 @@ generalwhitelist:
   CVE-2018-1000001: eglibc
   CVE-2016-2779: util-linux
   CVE-2019-3462: apt
+  CVE-2019-11068: libxslt
 EoF
 
 }
