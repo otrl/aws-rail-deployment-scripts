@@ -164,7 +164,7 @@ sub terminate_button_html {
      <input type="hidden" name="BUILD_NAME" value="{{ name }}">
      <button type="submit"
              class="btn btn-sm btn-block btn-warning"
-             onclick="return confirm('Are you sure you want to destroy the **{{ name }}** envirionment?')">
+             onclick="return confirm('Are you sure you want to destroy the **{{ name }}** environment?')">
       Terminate&nbsp;<i class="glyphicon glyphicon-trash"></i>
      </button>
     </form>
