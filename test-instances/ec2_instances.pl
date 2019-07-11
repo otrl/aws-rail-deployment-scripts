@@ -35,9 +35,9 @@ my %instances;
 
 foreach my $i (@ec2_instances) {
  if ($i->tags->{build} and $i->current_status eq 'running') {
-  
+
   my $this_name = $i->tags->{build};
-  
+
   $instances{$this_name}{'ip'} = $i->privateIpAddress;
   $instances{$this_name}{'owner'} = $i->tags->{launched_by_name} || 'Unknown';
 
@@ -46,11 +46,13 @@ foreach my $i (@ec2_instances) {
   #name & default domain & default site prefix.
   if ($i->tags->{hostname}) {
    $instances{$this_name}{'hostname'} = $default_site . "." . $i->tags->{hostname};
+   $instances{$this_name}{'portainer'} = $i->tags->{hostname} . ":9000";
   }
   else {
    my $this_hostname = $this_name;
    $this_hostname =~ s/_/-/g;
    $instances{$this_name}{'hostname'} = $default_site . "." . $this_hostname . "." . $default_domain;
+   $instances{$this_name}{'portainer'} = $this_hostname . "." . $default_domain . ":9000";
   };
 
   if ($i->tags->{terminate_after}) {
@@ -123,7 +125,7 @@ sub make_row {
     my $template = <<'ROW';
     <!-- desktop -->
     <tr class="hidden-xs hidden-sm {{ tr_class }}">
-        <td class="text-uppercase"><a href="https://{{ hostname }}">{{ name }}</a></td>
+        <td class="text-uppercase"><a href="https://{{ hostname }}">{{ name }}</a> <a title="Portainer" style="float:right" href="http://{{ portainer }}"><i class="glyphicon glyphicon-cloud"></i></a></td>
         <td class="text-center">{{ age }}</td>
         <td class="text-center">{{ owner }}</td>
         <td class="text-center">{{ created }}</td>
@@ -142,6 +144,7 @@ sub make_row {
                     <i class="glyphicon glyphicon-home"/></i>&nbsp;
                     <a href="https://{{ hostname }}">{{ name }}</a>
                 </li>
+                <li><i class="glyphicon glyphicon-cloud"></i><a href="http://{{ portainer }}">Portainer</a></li>
                 <li><i class="glyphicon glyphicon-globe"></i> {{ ip }}</li>
                 <li><i class="glyphicon glyphicon-user"></i> {{ owner }}</li>
                 <li><i class="glyphicon glyphicon-time"></i> {{ age }} </li>
