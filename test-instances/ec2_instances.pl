@@ -22,8 +22,9 @@ my $default_site = "southern";
 my $jenkins_terminate_job = "https://jenkins.otrl.io/job/sniffles-destroy";
 
 my $now = gmtime;
-my $days_until_warning = 2;
-my $days_until_danger  = 5;
+my $days_until_warning = 7;
+my $days_until_danger  = 14;
+my $days_until_stupid  = 30;
 
 my $ec2 = VM::EC2->new( -access_key => $AWS_KEY,
                         -secret_key => $AWS_SECRET,
@@ -37,36 +38,35 @@ foreach my $i (@ec2_instances) {
  if ($i->tags->{build} and $i->current_status eq 'running') {
 
   my $this_name = $i->tags->{build};
-
-  $instances{$this_name}{'ip'} = $i->privateIpAddress;
   $instances{$this_name}{'owner'} = $i->tags->{launched_by_name} || 'Unknown';
 
   #Fetch the hostname tag from the instance.  If there isn't one,
   #then make a decent guess at what it'll be based on the build
   #name & default domain & default site prefix.
   if ($i->tags->{hostname}) {
-   $instances{$this_name}{'hostname'} = $default_site . "." . $i->tags->{hostname};
-   $instances{$this_name}{'portainer'} = $i->tags->{hostname} . ":9000";
+   $instances{$this_name}{'website'} = 'https://' . $default_site . "." . $i->tags->{hostname};
+   $instances{$this_name}{'portainer'} = 'http://' . $i->tags->{hostname} . ":9000";
   }
   else {
    my $this_hostname = $this_name;
    $this_hostname =~ s/_/-/g;
-   $instances{$this_name}{'hostname'} = $default_site . "." . $this_hostname . "." . $default_domain;
-   $instances{$this_name}{'portainer'} = $this_hostname . "." . $default_domain . ":9000";
+   $instances{$this_name}{'website'} = 'https://' . $default_site . "." . $this_hostname . "." . $default_domain;
+   $instances{$this_name}{'portainer'} = 'http://' . $this_hostname . "." . $default_domain . ":9000";
   };
 
-  if ($i->tags->{terminate_after}) {
-   my $expires = Time::Piece->strptime(substr($i->tags->{terminate_after},0,-5), '%Y-%m-%dT%H:%M:%S');
-   my $expires_diff = $expires - $now;
-   my $expires_days = int($expires_diff->days);
-   my $expires_text = "$expires_days day";
-   if ($expires_days ne 1) { $expires_text .= "s"; }
-   $expires_text .= " left.<br>(<a href='${reprieve_url}$this_name'>extend instance life</a>)";
-   $instances{$this_name}{'expires'} = $expires_text;
-  }
-  else {
-   $instances{$this_name}{'expires'} = "n/a";
-  }
+$instances{$this_name}{'expires'} = "n/a";
+#  if ($i->tags->{terminate_after}) {
+#   my $expires = Time::Piece->strptime(substr($i->tags->{terminate_after},0,-5), '%Y-%m-%dT%H:%M:%S');
+#   my $expires_diff = $expires - $now;
+#   my $expires_days = int($expires_diff->days);
+#   my $expires_text = "$expires_days day";
+#   if ($expires_days ne 1) { $expires_text .= "s"; }
+#   $expires_text .= " left.<br>(<a href='${reprieve_url}$this_name'>extend instance life</a>)";
+#   $instances{$this_name}{'expires'} = $expires_text;
+#  }
+#  else {
+#   $instances{$this_name}{'expires'} = "n/a";
+#  }
 
   #Time stuff
   my $this_tp;
@@ -80,7 +80,13 @@ foreach my $i (@ec2_instances) {
   my $days = $now - $this_tp;
   my $age = int($days->days);
 
-  $instances{$this_name}{'age'} = $age == 1 ? "$age day" : "$age days";
+  if ($age == 0) {
+   $instances{$this_name}{'age'} = "Today"
+  } else {
+   $instances{$this_name}{'age'} = $age == 1 ? "$age day ago" : "$age days ago";
+  }
+
+  if ($age >= $days_until_stupid) { $instances{$this_name}{'age'} = '<strong style="color: red;">' . $instances{$this_name}{'age'} . '</strong>'; }
 
   if ( !defined $i->tags->{no_age_alert} ) {
    $instances{$this_name}{'tr_class'} = "";
@@ -125,12 +131,10 @@ sub make_row {
     my $template = <<'ROW';
     <!-- desktop -->
     <tr class="hidden-xs hidden-sm {{ tr_class }}">
-        <td class="text-uppercase"><a href="https://{{ hostname }}">{{ name }}</a> <a title="Portainer" style="float:right" href="http://{{ portainer }}"><i class="glyphicon glyphicon-cloud"></i></a></td>
+        <td class="text-uppercase"><a href="{{ website }}">{{ name }}</a> <a title="Portainer" style="float:right" href="{{ portainer }}"><i class="glyphicon glyphicon-cog"></i></a> </td>
         <td class="text-center">{{ age }}</td>
         <td class="text-center">{{ owner }}</td>
-        <td class="text-center">{{ created }}</td>
-        <td class="text-center">{{ ip }}</td>
-        <td class="text-center">{{ expires }}</td>
+        <!-- <td class="text-center">{{ expires }}</td> -->
         <td>
             {{{ terminate_button }}}
         </td>
@@ -142,14 +146,12 @@ sub make_row {
             <ul class="visible-xs visible-sm list-unstyled">
                 <li class="text-uppercase">
                     <i class="glyphicon glyphicon-home"/></i>&nbsp;
-                    <a href="https://{{ hostname }}">{{ name }}</a>
+                    <a href="{{ website }}">{{ name }}</a>
                 </li>
-                <li><i class="glyphicon glyphicon-cloud"></i><a href="http://{{ portainer }}">Portainer</a></li>
-                <li><i class="glyphicon glyphicon-globe"></i> {{ ip }}</li>
-                <li><i class="glyphicon glyphicon-user"></i> {{ owner }}</li>
+                <li><i class="glyphicon glyphicon-settings"></i><a href="{{ portainer }}">Portainer</a></li>
                 <li><i class="glyphicon glyphicon-time"></i> {{ age }} </li>
-                <li><i class="glyphicon glyphicon-calendar"></i> {{ created }}</li>
-                <li><i class="glyphicon glyphicon-fire"></i> {{ expires }}</li>
+                <li><i class="glyphicon glyphicon-user"></i> {{ owner }}</li>
+                <!-- <li><i class="glyphicon glyphicon-fire"></i> {{ expires }}</li> -->
             </ul>
             {{{ terminate_button }}}
         </td>
@@ -219,11 +221,9 @@ __DATA__
        <table class="table table-bordered table-hover table-condensed">
            <tr class="hidden-xs hidden-sm">
                <th class="text-center">Instance name</th>
-               <th class="text-center">Age (days)</th>
+               <th class="text-center">Launched</th>
                <th class="text-center">Created by</th>
-               <th class="text-center">Created</th>
-               <th class="text-center">IP</th>
-               <th class="text-center">Expires in..</th>
+               <!-- <th class="text-center">Expires in..</th> -->
                <th></th>
            </tr>
            {{{ table_rows }}}
