@@ -45,12 +45,14 @@ foreach my $i (@ec2_instances) {
   #name & default domain & default site prefix.
   if ($i->tags->{hostname}) {
    $instances{$this_name}{'website'} = 'https://' . $default_site . "." . $i->tags->{hostname};
+   $instances{$this_name}{'hostname'} = lc($i->tags->{hostname});
    $instances{$this_name}{'portainer'} = 'http://' . $i->tags->{hostname} . ":9000";
   }
   else {
    my $this_hostname = $this_name;
    $this_hostname =~ s/_/-/g;
    $instances{$this_name}{'website'} = 'https://' . $default_site . "." . $this_hostname . "." . $default_domain;
+   $instances{$this_name}{'hostname'} = lc($this_hostname . "." . $default_domain);
    $instances{$this_name}{'portainer'} = 'http://' . $this_hostname . "." . $default_domain . ":9000";
   };
 
@@ -131,7 +133,8 @@ sub make_row {
     my $template = <<'ROW';
     <!-- desktop -->
     <tr class="hidden-xs hidden-sm {{ tr_class }}">
-        <td class="text-uppercase"><a href="{{ website }}">{{ name }}</a> <a title="Portainer" style="float:right" href="{{ portainer }}"><i class="glyphicon glyphicon-cog"></i></a> </td>
+        <td><a href="{{ website }}" class="text-uppercase">{{ name }}</a> <a title="Portainer" style="float:right" href="{{ portainer }}"><i class="glyphicon glyphicon-cog"></i></a> </td>
+        <td>{{ hostname }}</td>
         <td class="text-center">{{ age }}</td>
         <td class="text-center">{{ owner }}</td>
         <!-- <td class="text-center">{{ expires }}</td> -->
@@ -148,6 +151,7 @@ sub make_row {
                     <i class="glyphicon glyphicon-home"/></i>&nbsp;
                     <a href="{{ website }}">{{ name }}</a>
                 </li>
+                <li><i class="glyphicon glyphicon-console"></i>{{ hostname }}</li>
                 <li><i class="glyphicon glyphicon-settings"></i><a href="{{ portainer }}">Portainer</a></li>
                 <li><i class="glyphicon glyphicon-time"></i> {{ age }} </li>
                 <li><i class="glyphicon glyphicon-user"></i> {{ owner }}</li>
@@ -219,6 +223,7 @@ __DATA__
        <table class="table table-bordered table-hover table-condensed">
            <tr class="hidden-xs hidden-sm">
                <th class="text-center">Instance name</th>
+               <th class="text-center">Hostname</th>
                <th class="text-center">Launched</th>
                <th class="text-center">Created by</th>
                <!-- <th class="text-center">Expires in..</th> -->
