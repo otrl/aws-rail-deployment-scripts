@@ -12,7 +12,7 @@
     "aws-sdk": "2.252.1",
     "axios": "0.18.1",
     "heredocument": "2.0.2",
-    "lodash": "4.17.12",
+    "lodash": "4.17.19",
     "moment": "2.22.2"
   }
 }
