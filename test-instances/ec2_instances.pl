@@ -171,6 +171,7 @@ sub terminate_button_html {
     <form method="post" target="jenkins" action="{{ job }}/buildWithParameters">
      <input type="hidden" name="token" value="zWZS0cMc27QuDbcAboQltuOOBvOPoPuq">
      <input type="hidden" name="BUILD_NAME" value="{{ name }}">
+     <input type="hidden" name="Jenkins-Crumb" value="30051e4bcb06135badfe70ae01b775dd72ba6126da8b6f832fee20f22342b2c6">
      <button type="submit"
              class="btn btn-sm btn-block btn-warning"
              onclick="return confirm('Are you sure you want to destroy the **{{ name }}** environment?')">
