@@ -1,0 +1,40 @@
+#!/bin/bash
+
+if [ -z "${otrl_service_name+x}" ]; then
+ echo
+ echo "The env variable \$otrl_service_name wasn't set."
+ echo
+ exit 1
+fi
+
+export NODE_IP=`ip route | awk '/default/ { print $3 }'`
+
+#Generate the ${otrl_service_name} config file
+mkdir -p /etc/${otrl_service_name}/conf.d/
+/usr/local/bin/templater /opt/templates/config.tmpl /etc/${otrl_service_name}/conf.d/${otrl_service_name}.conf
+
+if [ $? -ne "0" ]; then
+ echo "Failed to create the ${otrl_service_name} config file."
+ exit 1
+fi
+
+if [ "$SERVICE_LOG_LEVEL" ]; then
+ sed -i -E "s/name=\"io.otrl\" level=\"[A-Z]+\"/name=\"io.otrl\" level=\"${SERVICE_LOG_LEVEL}\"/g" /etc/${otrl_service_name}/logback.xml
+ sed -i -E "s/level=\"\\$\{rootLevel:-[A-Z]+\}\"/level=\"${SERVICE_LOG_LEVEL}\"/g" /etc/${otrl_service_name}/logback.xml
+fi
+
+#Change logging to stdout
+sed -i "s/async-file/console/g" /etc/${otrl_service_name}/logback.xml
+sed -i 's/appender-ref ref="file"/appender-ref ref="console"/g' /etc/${otrl_service_name}/logback.xml
+sed -i '/appender-ref ref="syslog"/d' /etc/${otrl_service_name}/logback.xml
+
+#Logs to PID 1 stdout
+ln -sf /proc/1/fd/1 /var/log/${otrl_service_name}/${otrl_service_name}.log
+
+#Run cmdaemon if it exists and the variables are set
+if [ -f "/usr/local/bin/cmdaemon" ] && [ "$CMDAEMON_COMMAND" ] && [ "$CMDAEMON_PORT" ]; then
+ /usr/local/bin/cmdaemon >/proc/1/fd/1 2>&1 &
+fi
+
+#Run ${otrl_service_name}
+exec /usr/share/${otrl_service_name}/bin/${otrl_service_name}
