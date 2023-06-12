@@ -19,6 +19,9 @@ import datetime
 # os.environ['AWS_SECRET_ACCESS_KEY'] = ""
 
 
+boto3.set_stream_logger('')
+print(os.environ['AWS_ACCESS_KEY_ID'])
+
 AWS_KEY = os.environ['AWS_ACCESS_KEY_ID']
 AWS_SECRET = os.environ['AWS_SECRET_ACCESS_KEY']
 AWS_REGION = "eu-west-1"
