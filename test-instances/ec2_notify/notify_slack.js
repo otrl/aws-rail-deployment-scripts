@@ -129,8 +129,8 @@ const getCatGif = () => axios.head(catApiUrl, { maxRedirects: 0 })
 
 const formatMessage = (meta) => {
     const links = [
-        ['https://jenkins.otrl.io/job/sniffles-deploy/build?delay=0sec', 'create'],
-        ['https://jenkins.otrl.io/job/sniffles-destroy/build?delay=0sec', 'terminate'],
+        ['https://jenkins.otrl.io/job/SID-Box-Deploy/build?delay=0sec', 'create'],
+        ['https://jenkins.otrl.io/job/SID-Box-Terminate/build?delay=0sec', 'terminate'],
         ['https://jenkins.otrl.io/job/Test%20Instances/ws/instances.html', 'full listing']
     ];
     return getCatGif()
