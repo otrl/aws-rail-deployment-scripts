@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "aws-sdk": "2.1395.0",
-    "axios": "1.4.0",
+    "axios": "1.6.0",
     "heredocument": "2.0.2",
     "lodash": "4.17.21",
     "moment": "2.29.4"
