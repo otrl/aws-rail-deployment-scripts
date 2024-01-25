@@ -28,9 +28,8 @@ default_site = "southern"
 jenkins_terminate_job = "https://jenkins.otrl.io/job/SID-Box-Terminate"
 
 now = datetime.datetime.now()
-days_until_warning = 7
-days_until_danger = 14
-days_until_stupid = 30
+days_until_warning = 30
+days_until_danger = 60
 
 
 def main():
