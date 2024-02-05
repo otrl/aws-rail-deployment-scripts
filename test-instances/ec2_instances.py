@@ -56,7 +56,7 @@ def main():
             for tag in tags:
                 build_tags[tag["Key"]] = tag["Value"]
 
-            if build_tags["build"] != "buildandscan":
+            if build_tags["build"] != "buildandscan" and instance["State"]["Name"] == "running":
                 instances[build_tags["build"]] = {}
                 instances[build_tags["build"]]['name'] = build_tags["build"]
                 instances[build_tags["build"]]['owner'] = build_tags["launched_by_name"] if build_tags["launched_by_name"] != "" else 'Unknown'
