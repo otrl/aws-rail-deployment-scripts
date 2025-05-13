@@ -75,7 +75,7 @@ def main():
     for res in mqinstances:
         build = res["BrokerName"].split("-rabbit-dev")[0]
         if build in instances:
-            instances[build]['rabbit'] ="https://" + res["BrokerId"] + ".mq." + AWS_REGION + ".amazonaws.com"
+            instances[build]['rabbit'] ="https://" + res["BrokerId"] + ".mq." + AWS_REGION + ".on.aws"
 
 
     for res in instances:
