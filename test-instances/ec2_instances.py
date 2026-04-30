@@ -64,7 +64,7 @@ def main():
                 instances[build_tags["build"]]['hostname'] = build_tags['hostname']
                 instances[build_tags["build"]]['portainer'] = 'http://' + build_tags['hostname'] + ":9000"
                 instances[build_tags["build"]]['rabbit'] = ""
-                instances[build_tags["build"]]['admin'] = 'http://admin-southeastern' + build_tags['hostname']
+                instances[build_tags["build"]]['admin'] = 'http://admin-southeastern.' + build_tags['hostname']
                 instances[build_tags["build"]]['launched_at'] = build_tags['launched_at']
                 instances[build_tags["build"]]['running'] = instance["State"]["Name"] == "running"
 
@@ -86,7 +86,11 @@ def main():
         instances[res]['launched'] = build_launch_date(instances[res]['launched'])
 
 
-    make_html(sorted(instances.items()))
+    sorted_instances = sorted(
+        instances.items(),
+        key=lambda item: (not item[1]['running'], item[1]['name'].lower())
+    )
+    make_html(sorted_instances)
 
 
 def build_launch_date(days_ago):
